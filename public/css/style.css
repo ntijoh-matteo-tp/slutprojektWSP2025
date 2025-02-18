@@ -13,6 +13,7 @@
   height:100%;
   width:33%;
   border-style: inset;
+  border-color: white;
   border-width: 0.7rem;
 }
 
@@ -31,12 +32,39 @@
   flex-direction: row;
 }
 
-#articleHomeMain {
-  border-style: dashed;
+#articleHomeTimers {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-right: 8rem;
+  border-style: ridge;
   border-width: 0.7rem;
-  width: 40%;
+  border-radius: 2rem;
+  width: 20%;
   height: 90%;
 }
+
+#articleHomeMain {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-style: ridge;
+  border-width: 0.7rem;
+  border-radius: 2rem;
+  width: 60%;
+  height: 90%;
+}
+#clockBox {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  border-style: ridge;
+  border-width: 0.7rem;
+  border-color: rgba(255, 255, 255, 0.272);
+  width: 50%;
+  height: 10%;
+}
+
 
 body{ 
   margin-left:0;

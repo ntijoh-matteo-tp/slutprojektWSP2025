@@ -1,4 +1,9 @@
+article id="articleHomeTimers"
 article id="articleHomeMain"
-    h1 Timers
-    - t = Time.now.getlocal('-08:00')
-    p Sky local time: #{t}
+    article id="clockBox"
+        h2 Local time:
+        span id="localClock"
+    article id="clockBox"
+        h2 Sky time:
+        span id="skyClock"
+    script src="/js/clock.js"
