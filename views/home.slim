@@ -1,4 +1,13 @@
 article id="articleHomeTimers"
+    ol
+        - puts "#{custom_timers}"
+        - puts "#{custom_timers}"
+        - puts "#{custom_timers}"
+        - puts "#{custom_timers}"
+        - custom_timers.each do |timer|
+            li 
+                h1 #{timer["name"]}
+                h2 #{timer["hour"]} : #{timer["minute"]}
 article id="articleHomeMain"
     article id="clockBox"
         h2 Local time:

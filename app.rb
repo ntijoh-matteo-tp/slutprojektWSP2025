@@ -5,5 +5,9 @@ require 'sinatra/reloader'
 require 'bcrypt'
 
 get('/') do
-  slim(:home)
+  db = SQLite3::Database.new("db/database.db")
+  db.results_as_hash = true
+  result = db.execute("SELECT * FROM custom_timers")
+
+  slim(:home, locals:{custom_timers:result})
 end 
