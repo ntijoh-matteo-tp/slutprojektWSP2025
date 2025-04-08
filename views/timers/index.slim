@@ -1,0 +1,13 @@
+h1 Your timers:
+
+ol
+    - custom_timers.each do |timer|
+        li
+            - puts "#{timer}"
+            h2 #{timer["name"]}
+            h2 #{timer["hour"]} : #{timer["minute"]}
+            form method="POST" action="/timers/#{timer['hour']}X#{timer['minute']}/delete/" 
+                input type="submit" value="DELETE"
+            a href="/timers/#{timer['hour']}X#{timer['minute']}/edit/" Edit
+
+a id="timersAnchor" href="/timers/new/" Create

@@ -7,11 +7,19 @@ html lang="en"
     link rel="stylesheet" href="/css/style.css"/
     title Document
   body
+    - if flash[:notice]
+      p.notice = flash[:notice]
     header id="headerHome"
         img class="imgHeaderHome" src="/img/header.jpg" alt="musik sdasd"/
         h1 SkyClock
         nav 
-            a href="/login" Login
+            - if session[:user_id] == nil
+              - puts "Sesh: #{session}"
+              a href="/user/showlogin/" Login
+            - else 
+              p Logged in as #{session[:user_id]}
+              form action="/logout/" method="POST"
+                input type="submit" value="Log out"/
             a href="/" Home
     main id="mainHome"
       ==yield

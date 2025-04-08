@@ -1,18 +1,38 @@
 article id="articleHomeTimers"
-    ol
-        - puts "#{custom_timers}"
-        - puts "#{custom_timers}"
-        - puts "#{custom_timers}"
-        - puts "#{custom_timers}"
-        - custom_timers.each do |timer|
-            li 
-                h1 #{timer["name"]}
-                h2 #{timer["hour"]} : #{timer["minute"]}
+    h1 TIMERS
+    ol id="customTimers"
+        - for i in 0..2
+            - if custom_timers.length > i
+                li
+                    - puts "#{custom_timers[i]}"
+                    h2 #{custom_timers[i]["name"]}
+                    h2 #{custom_timers[i]["hour"]} : #{custom_timers[i]["minute"]}
+    - if session[:permission] == "user" || session[:permission] == "admin"
+        a id="timersAnchor" href="/timers/" Expand
+    - else 
+        a id="timersAnchor" href="/user/showlogin/" Expand
 article id="articleHomeMain"
-    article id="clockBox"
-        h2 Local time:
-        span id="localClock"
-    article id="clockBox"
-        h2 Sky time:
-        span id="skyClock"
+    div id="clocks"
+        article id="clockBox"
+            h2 Local time:
+            span id="localClock"
+        article id="clockBox"
+            h2 Sky time:
+            span id="skyClock"
+    ul class="defaultTimers"
+        - for i in 0..(default_timers.length - 1)
+            li class="defaultTimerItem"
+                - puts "#{default_timers[i]}"
+                h2 #{default_timers[i]["name"]}
+                - if DateTime.now.strftime("%H").to_i % 2 == 0 && DateTime.now.strftime("%M").to_i > (default_timers[i]["minute"].to_i + 10) 
+                    h2 #{DateTime.now.strftime("%H").to_i + 2} : #{default_timers[i]["minute"]}
+                - elsif DateTime.now.strftime("%H").to_i % 2 == 0 && DateTime.now.strftime("%M").to_i < (default_timers[i]["minute"].to_i) 
+                    h2 #{DateTime.now.strftime("%H").to_i} : #{default_timers[i]["minute"]}
+                - elsif DateTime.now.strftime("%H").to_i % 2 == 0 && DateTime.now.strftime("%M").to_i <= (default_timers[i]["minute"].to_i + 10) && DateTime.now.strftime("%M").to_i >= (default_timers[i]["minute"].to_i) 
+                    h2 id="activeEventh2" #{DateTime.now.strftime("%H").to_i} : #{default_timers[i]["minute"]} ! CURRENTLY ACTIVE !
+                - else
+                    h2 #{DateTime.now.strftime("%H").to_i + 1} : #{default_timers[i]["minute"]}
+        - if session[:permission] == admin
+            a href="/default_timers/new/"
+        - else
     script src="/js/clock.js"

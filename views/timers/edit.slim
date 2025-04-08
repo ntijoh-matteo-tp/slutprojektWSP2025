@@ -1,0 +1,5 @@
+form action="/timers/#{timer[:hour]}X#{timer[:minute]}/update/" method="post"
+    input type="text" name="name" placeholder="Name of the timer" value="#{timer["name"]}"
+    input type="number" min="0" max="23" name="hour" placeholder="Hour" value="#{timer["hour"]}"
+    input type="number" min="0" max="59" name="minute" placeholder="Minute" value="#{timer["minute"]}"
+    input type="submit" value="Edit"
