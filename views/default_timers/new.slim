@@ -1,5 +1,4 @@
-form action="/timers/new/" method="post"
-    input type="text" name="name" placeholder="Name of the timer"
-    input type="number" min="0" max="23" name="hour" placeholder="Hour"
-    input type="number" min="0" max="59" name="minute" placeholder="Minute"
+form action="/default_timers/new/" method="post"
+    input type="text" name="name" required="required" placeholder="Name of the timer"
+    input type="number" min="0" max="59" name="minute" required="required" placeholder="Minute"
     input type="submit" value="Create timer"

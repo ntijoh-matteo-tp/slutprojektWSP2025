@@ -32,7 +32,11 @@ article id="articleHomeMain"
                     h2 id="activeEventh2" #{DateTime.now.strftime("%H").to_i} : #{default_timers[i]["minute"]} ! CURRENTLY ACTIVE !
                 - else
                     h2 #{DateTime.now.strftime("%H").to_i + 1} : #{default_timers[i]["minute"]}
-        - if session[:permission] == admin
-            a href="/default_timers/new/"
-        - else
+                - if session[:permission] == "admin"
+                    form method="POST" action="/default_timers/#{default_timers[i]['hour']}X#{default_timers[i]['minute']}/delete/" 
+                        input type="submit" value="DELETE"
+                    a href="/default_timers/#{default_timers[i]['hour']}X#{default_timers[i]['minute']}/edit/" Edit                
+        - if session[:permission] == "admin"
+            a href="/default_timers/new/" New
+            
     script src="/js/clock.js"
