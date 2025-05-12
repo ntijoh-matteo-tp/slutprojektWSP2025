@@ -1,177 +1,169 @@
 require 'sinatra'
-require 'sinatra/flash'
 require 'slim'
-require 'sqlite3'
-require 'sinatra/reloader'
-require 'bcrypt'
-require 'tzinfo'
+require './model'
 
 enable :sessions
 
-def set_error(msg)
-  flash[:notice] = msg
-end
-
-get('/') do
-  db = SQLite3::Database.new("db/database.db")
-  db.results_as_hash = true
-  custom_timers_result = db.execute("SELECT * FROM custom_timers WHERE user_id = ?", session[:user_id])
-  default_timers_result = db.execute("SELECT * FROM default_timers")
-  #puts "hello eeadedqwqdwq #{default_timers_result}"
-
+before do
   if session[:user_id] == nil
     session[:permission] = "guest"
-  end  
+  else
+    result = get_user_credentials_from_id(session[:user_id], "db/database.db")
+    session[:permission] = result.first["permission"]
+  end
+end
 
-  puts "Perms: #{session[:permission]}"
-
-  slim(:home, locals:{custom_timers:custom_timers_result, default_timers:default_timers_result})
-end 
-
-get('/default_timers/new/') do
+before("/default_timers/*") do
   if session[:permission] != "admin"
     set_error("Permission denied")
     redirect("/")
   end
+end
 
+before("/timers/*") do
+  if session[:permission] == "guest"
+    set_error("You must be logged in to view personal timers")
+    redirect("/user/showlogin/")
+  end
+end
+
+get('/') do
+  custom_timers_result, default_timers_result = index_timers(session[:user_id], "db/database.db")
+
+  slim(:home, locals:{custom_timers:custom_timers_result, default_timers:default_timers_result, user_id:session[:user_id], permission:session[:permission]})
+end 
+
+get('/default_timers/new/') do
   slim(:"default_timers/new")
 end 
-post('/default_timers/new/') do
+post('/default_timers/create/') do
   name = params[:name]
   hour = 0
   minute = params[:minute]
 
-  db = SQLite3::Database.new("db/database.db")
-  db.execute("INSERT INTO default_timers (name, hour, minute) VALUES (?, ?, ?)", [name, hour, minute])
+  create_default_timers(name, hour, minute, "db/database.db")
+
   redirect('/')
 end
 get('/default_timers/:time/edit/') do
-  if session[:permission] != "admin"
-    set_error("Permission denied")
-    redirect("/")
-  end
-
   hour = params[:time].split("X")[0]
   minute = params[:time].split("X")[1]
 
-  db = SQLite3::Database.new("db/database.db")
-  db.results_as_hash = true
-  result = db.execute("SELECT * FROM default_timers WHERE hour = ? AND minute = ?", [hour, minute]).first
-  puts "Results: #{result}"
+  result = select_default_timers(hour, minute, "db/database.db")
+
   slim(:"/default_timers/edit", locals:{timer:result})
 end 
-
 post('/default_timers/:time/update/') do
-  puts "Hello 2: #{params[:time]}"
-  currentHour = params[:time].split("X")[0]
-  currentMinute = params[:time].split("X")[1]
+  currentTime = split_params(params[:time])
+  currentHour = currentTime[0]
+  currentMinute = currentTime[1]
+
   name = params[:name]
   hour = params[:hour]
   minute = params[:minute]
 
-  puts " Hello: #{[currentHour, currentMinute, name, hour, minute]}"
-  db = SQLite3::Database.new("db/database.db")
-  db.results_as_hash = true
-  db.execute("UPDATE default_timers SET hour = ?, minute = ?, name = ? WHERE hour = ? AND minute = ?", [hour, minute, name, currentHour, currentMinute])
+  update_default_timers(hour, minute, name, currentHour, currentMinute, "db/database.db")
+
   redirect('/')
 end
+post('/default_timers/:time/delete/') do
+  currentTime = split_params(params[:time])
+  currentHour = currentTime[0]
+  currentMinute = currentTime[1]
+
+  delete_default_timers(currentHour, currentMinute, "db/database.db")
+  redirect('/')
+end 
 
 get('/timers/') do
-  db = SQLite3::Database.new("db/database.db")
-  db.results_as_hash = true
-  custom_timers_result = db.execute("SELECT * FROM custom_timers WHERE user_id = ?", [session[:user_id]])
+  user_id = session[:user_id]
+
+  custom_timers_result = index_timers(user_id, "db/database.db")[0]
 
   slim(:"timers/index", locals:{custom_timers:custom_timers_result})
 end
-
 get('/timers/new/') do
   slim(:"timers/new")
 end 
-
-post('/timers/new/') do
+post('/timers/create/') do
   name = params[:name]
   hour = params[:hour]
   minute = params[:minute]
   user_id = session[:user_id]
 
-  db = SQLite3::Database.new("db/database.db")
-  db.execute("DELETE FROM custom_timers WHERE hour = ? AND minute = ? AND user_id = ?", [hour, minute, user_id])
-  db.execute("INSERT INTO custom_timers (name, hour, minute, user_id) VALUES (?, ?, ?, ?)", [name, hour, minute, user_id])
+  create_custom_timers(name, hour, minute, user_id, "db/database.db")
+
   redirect('/timers/')
 end 
-
-post('/timers/:time/delete/') do
-  hour = params[:time].split("X")[0]
-  minute = params[:time].split("X")[1]
-  user_id = session[:user_id]
-
-  db = SQLite3::Database.new("db/database.db")
-  db.execute("DELETE FROM custom_timers WHERE hour = ? AND minute = ? AND user_id = ?", [hour, minute, user_id])
-  redirect('/timers/')
-end 
-
-post('/default_timers/:time/delete/') do
-  hour = params[:time].split("X")[0]
-  minute = params[:time].split("X")[1]
-
-  db = SQLite3::Database.new("db/database.db")
-  db.execute("DELETE FROM default_timers WHERE hour = ? AND minute = ?", [hour, minute])
-  redirect('/')
-end 
-
 get('/timers/:time/edit/') do
-  hour = params[:time].split("X")[0]
-  minute = params[:time].split("X")[1]
+  time = split_params(params[:time])
+  hour = time[0]
+  minute = time[1]
   user_id = session[:user_id]
 
-  db = SQLite3::Database.new("db/database.db")
-  db.results_as_hash = true
-  result = db.execute("SELECT * FROM custom_timers WHERE hour = ? AND minute = ? AND user_id = ?", [hour, minute, user_id]).first
-  puts "Results: #{result}"
+  result = select_custom_timers(hour, minute, user_id, "db/database.db")
+
   slim(:"/timers/edit", locals:{timer:result})
 end 
-
 post('/timers/:time/update/') do
-  currentHour = params[:time].split("X")[0]
-  currentMinute = params[:time].split("X")[1]
+  currentTime = split_params(params[:time])
+  currentHour = currentTime[0]
+  currentMinute = currentTime[1]
   name = params[:name]
   hour = params[:hour]
   minute = params[:minute]
-  id = session[:user_id]
-  puts " Hello: #{[currentHour, currentMinute, name, hour, minute]}"
-  db = SQLite3::Database.new("db/database.db")
-  db.results_as_hash = true
-  db.execute("UPDATE custom_timers SET hour = ?, minute = ?, name = ? WHERE hour = ? AND minute = ? AND user_id = ?", [hour, minute, name, currentHour, currentMinute, id])
+  user_id = session[:user_id]
+
+  update_custom_timers(hour, minute, name, currentHour, currentMinute, user_id, "db/database.db")
+
+  redirect('/timers/')
+end
+post('/timers/:time/delete/') do
+  time = split_params(params[:time])
+  hour = time[0]
+  minute = time[1]
+  user_id = session[:user_id]
+
+  delete_custom_timers(hour, minute, user_id, "db/database.db")
+
   redirect('/timers/')
 end
 
 get('/user/showlogin/') do
   slim(:"user/login")
 end
-
 post('/login/') do
-  username = params[:username]
-  password = params[:password]
+  session[:login_attempts] ||= []
 
-  db = SQLite3::Database.new('db/database.db')
-  db.results_as_hash = true
-  result = db.execute("SELECT id, password_digest, permission FROM users WHERE username = ?", [username])
+  session[:login_attempts].append(Time.now())
 
-  if result.empty?
-    set_error("Invalid login credentials")
-    redirect("/user/showlogin/")
+  session[:login_attempts].reject! do |attempt|
+    (Time.now - attempt) > 10
   end
 
-  pwdigest = result.first["password_digest"]
-
-  if BCrypt::Password.new(pwdigest) == password
-    session[:user_id] = result.first["id"]
-    session[:username] = username
-    session[:permission] = result.first["permission"]
-    redirect('/')
+  if session[:login_attempts].length > 4
+    set_error("Too many login attempts, please wait a few seconds.")
+    redirect("/user/showlogin/")
   else
-    set_error("Invalid login credentials")
-    redirect("/showlogin/")
+    username = params[:username]
+    password = params[:password]
+
+    result = get_user_credentials(username, "db/database.db")
+
+    if result.empty?
+      set_error("Invalid login credentials")
+      redirect("/user/showlogin/")
+    end
+
+    if password_matches?(result, password)
+      session[:user_id] = result.first["id"]
+      session[:username] = username
+      session[:permission] = result.first["permission"]
+      redirect('/')
+    else
+      set_error("Invalid login credentials")
+      redirect("/user/showlogin/")
+    end
   end
 end
 
@@ -185,13 +177,11 @@ post('/register/') do
   password_confirm = params[:password_confirm]
   permission = "user"
 
-  db = SQLite3::Database.new('db/database.db')
-  result = db.execute("SELECT id FROM users WHERE username=?", username)
+  result = username_available?(username)
     
-  if result.empty?
+  if result
     if (password == password_confirm)
-      password_digest = BCrypt::Password.create(password)
-      db.execute("INSERT INTO users (username, password_digest, permission) VALUES (?, ?, ?)", [username, password_digest, permission])
+      register_user(username, password, permission)
       redirect('/')
     else
       set_error("Password does not match")

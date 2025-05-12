@@ -7,7 +7,7 @@ article id="articleHomeTimers"
                     - puts "#{custom_timers[i]}"
                     h2 #{custom_timers[i]["name"]}
                     h2 #{custom_timers[i]["hour"]} : #{custom_timers[i]["minute"]}
-    - if session[:permission] == "user" || session[:permission] == "admin"
+    - if permission == "user" || permission == "admin"
         a id="timersAnchor" href="/timers/" Expand
     - else 
         a id="timersAnchor" href="/user/showlogin/" Expand
@@ -32,11 +32,11 @@ article id="articleHomeMain"
                     h2 id="activeEventh2" #{DateTime.now.strftime("%H").to_i} : #{default_timers[i]["minute"]} ! CURRENTLY ACTIVE !
                 - else
                     h2 #{DateTime.now.strftime("%H").to_i + 1} : #{default_timers[i]["minute"]}
-                - if session[:permission] == "admin"
-                    form method="POST" action="/default_timers/#{default_timers[i]['hour']}X#{default_timers[i]['minute']}/delete/" 
+                - if permission == "admin"
+                    form method="POST"   action="/default_timers/#{default_timers[i]['hour']}X#{default_timers[i]['minute']}/delete/" 
                         input type="submit" value="DELETE"
                     a href="/default_timers/#{default_timers[i]['hour']}X#{default_timers[i]['minute']}/edit/" Edit                
-        - if session[:permission] == "admin"
+        - if permission == "admin"
             a href="/default_timers/new/" New
             
     script src="/js/clock.js"

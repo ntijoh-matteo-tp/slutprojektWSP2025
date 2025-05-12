@@ -35,12 +35,6 @@ function CheckTimer(timer, currentTime){
 
     //currentTimeHour % 2 == 0
     if (currentTimeMinute == (timerTimeMinute) && currentTimeHour % 2 == 0 && currentTimeSecond == 0) {
-        console.log("yo");
-        window.alert("its time!!");
-    }
-
-    if (currentTimeMinute == (timerTimeMinute) && currentTimeHour % 2 == 0 && currentTimeSecond == 0) {
-        console.log("yo");
         window.alert("its time!!");
     }
 }
